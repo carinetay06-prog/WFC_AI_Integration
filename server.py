@@ -18,7 +18,7 @@ app.add_middleware(
 
 # Load tool contract (safe relative path)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TOOLS_FILE = os.path.join(BASE_DIR, "../shopfloor_tool_contract.json")
+TOOLS_FILE = os.path.join(BASE_DIR, "shopfloor_tool_contract.json")
 
 if not os.path.exists(TOOLS_FILE):
     raise FileNotFoundError(f"{TOOLS_FILE} not found!")
@@ -111,3 +111,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))  # Use cloud-assigned port if available
     print(f"[START] Shopfloor MCP Server running at http://0.0.0.0:{port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
+
