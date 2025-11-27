@@ -1,6 +1,6 @@
 {
   "toolName": "ShopfloorGraphTool",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Query factory shopfloor graph for machines, sensors, operators, work orders, and maintenance logs.",
   "timeouts": {
     "defaultMs": 15000
@@ -48,7 +48,7 @@
           "items": { "type": "string" }
         }
       },
-      "cypher": "MATCH (m:Machine)-[:HAS_WORK_ORDER]->(w:WorkOrder) WHERE w.status = 'Overdue' AND (m.id IN $machineIds OR $machineIds IS NULL) RETURN m.id AS machineId, w.id AS workOrderId, w.scheduledTime AS due ORDER BY due ASC",
+      "cypher": "MATCH (m:Machine)-[:HAS_WORK_ORDER]->(w:WorkOrder) WHERE w.status = 'Overdue' AND ($machineIds IS NULL OR m.id IN $machineIds) RETURN m.id AS machineId, w.id AS workOrderId, w.scheduledTime AS due ORDER BY due ASC",
       "outputs": [
         { "name": "machineId", "type": "string" },
         { "name": "workOrderId", "type": "string" },
