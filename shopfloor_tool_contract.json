@@ -1,6 +1,6 @@
 {
   "toolName": "ShopfloorGraphTool",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Query factory shopfloor graph for machines, sensors, operators, work orders, and maintenance logs.",
   "timeouts": {
     "defaultMs": 15000
@@ -12,99 +12,76 @@
     "highVibrationMachines": {
       "description": "List machines whose linked sensors exceed a reading threshold.",
       "inputs": {
-        "threshold": {
-          "type": "number",
+        "thresholds": {
+          "type": "array",
+          "items": { "type": "number" },
           "required": true
         },
-        "unit": {
-          "type": "string",
+        "units": {
+          "type": "array",
+          "items": { "type": "string" },
           "required": true,
-          "example": "mm/s"
+          "example": ["mm/s"]
         }
       },
-      "cypher": "MATCH (m:Machine)-[:MONITORED_BY]->(s:Sensor) WHERE s.reading > $threshold AND s.unit = $unit RETURN m.id AS machineId, s.id AS sensorId, s.reading AS reading, s.timestamp AS at ORDER BY reading DESC",
+      "cypher": "MATCH (m:Machine)-[:MONITORED_BY]->(s:Sensor) WHERE s.reading IN $thresholds AND s.unit IN $units RETURN m.id AS machineId, s.id AS sensorId, s.reading AS reading, s.timestamp AS at ORDER BY reading DESC",
       "outputs": [
-        {
-          "name": "machineId",
-          "type": "string"
-        },
-        {
-          "name": "sensorId",
-          "type": "string"
-        },
-        {
-          "name": "reading",
-          "type": "number"
-        },
-        {
-          "name": "at",
-          "type": "string"
-        }
+        { "name": "machineId", "type": "string" },
+        { "name": "sensorId", "type": "string" },
+        { "name": "reading", "type": "number" },
+        { "name": "at", "type": "string" }
       ],
       "examples": [
         {
           "inputs": {
-            "threshold": 7.5,
-            "unit": "mm/s"
+            "thresholds": [7.5, 10.0],
+            "units": ["mm/s", "m/s²"]
           }
         }
       ]
     },
     "overdueWorkOrders": {
       "description": "Find machines that have overdue work orders.",
-      "inputs": {},
-      "cypher": "MATCH (m:Machine)-[:HAS_WORK_ORDER]->(w:WorkOrder) WHERE w.status = 'Overdue' RETURN m.id AS machineId, w.id AS workOrderId, w.scheduledTime AS due ORDER BY due ASC",
-      "outputs": [
-        {
-          "name": "machineId",
-          "type": "string"
-        },
-        {
-          "name": "workOrderId",
-          "type": "string"
-        },
-        {
-          "name": "due",
-          "type": "string"
+      "inputs": {
+        "machineIds": {
+          "type": "array",
+          "items": { "type": "string" }
         }
+      },
+      "cypher": "MATCH (m:Machine)-[:HAS_WORK_ORDER]->(w:WorkOrder) WHERE w.status = 'Overdue' AND (m.id IN $machineIds OR $machineIds IS NULL) RETURN m.id AS machineId, w.id AS workOrderId, w.scheduledTime AS due ORDER BY due ASC",
+      "outputs": [
+        { "name": "machineId", "type": "string" },
+        { "name": "workOrderId", "type": "string" },
+        { "name": "due", "type": "string" }
       ],
       "examples": [
         {
-          "inputs": {}
+          "inputs": {
+            "machineIds": ["M100", "M200"]
+          }
         }
       ]
     },
     "currentOperator": {
       "description": "Get the current operator for a machine.",
       "inputs": {
-        "machineId": {
-          "type": "string",
+        "machineIds": {
+          "type": "array",
+          "items": { "type": "string" },
           "required": true
         }
       },
-      "cypher": "MATCH (m:Machine {id: $machineId})- [r:OPERATED_BY]->(o:Operator) RETURN m.id AS machineId, o.id AS operatorId, o.name AS operatorName, r.shift AS shift",
+      "cypher": "MATCH (m:Machine)- [r:OPERATED_BY]->(o:Operator) WHERE m.id IN $machineIds RETURN m.id AS machineId, o.id AS operatorId, o.name AS operatorName, r.shift AS shift",
       "outputs": [
-        {
-          "name": "machineId",
-          "type": "string"
-        },
-        {
-          "name": "operatorId",
-          "type": "string"
-        },
-        {
-          "name": "operatorName",
-          "type": "string"
-        },
-        {
-          "name": "shift",
-          "type": "string"
-        }
+        { "name": "machineId", "type": "string" },
+        { "name": "operatorId", "type": "string" },
+        { "name": "operatorName", "type": "string" },
+        { "name": "shift", "type": "string" }
       ],
       "examples": [
         {
           "inputs": {
-            "machineId": "M100"
+            "machineIds": ["M100", "M101"]
           }
         }
       ]
@@ -112,42 +89,25 @@
     "sensorsByZone": {
       "description": "List sensors attached to machines located in a given zone.",
       "inputs": {
-        "zoneId": {
-          "type": "string",
+        "zoneIds": {
+          "type": "array",
+          "items": { "type": "string" },
           "required": true
         }
       },
-      "cypher": "MATCH (z:FacilityZone {id: $zoneId})<-[:LOCATED_IN]-(m:Machine)-[:MONITORED_BY]->(s:Sensor) RETURN z.id AS zoneId, m.id AS machineId, s.id AS sensorId, s.type AS sensorType, s.reading AS reading, s.unit AS unit",
+      "cypher": "MATCH (z:FacilityZone)<-[:LOCATED_IN]-(m:Machine)-[:MONITORED_BY]->(s:Sensor) WHERE z.id IN $zoneIds RETURN z.id AS zoneId, m.id AS machineId, s.id AS sensorId, s.type AS sensorType, s.reading AS reading, s.unit AS unit",
       "outputs": [
-        {
-          "name": "zoneId",
-          "type": "string"
-        },
-        {
-          "name": "machineId",
-          "type": "string"
-        },
-        {
-          "name": "sensorId",
-          "type": "string"
-        },
-        {
-          "name": "sensorType",
-          "type": "string"
-        },
-        {
-          "name": "reading",
-          "type": "number"
-        },
-        {
-          "name": "unit",
-          "type": "string"
-        }
+        { "name": "zoneId", "type": "string" },
+        { "name": "machineId", "type": "string" },
+        { "name": "sensorId", "type": "string" },
+        { "name": "sensorType", "type": "string" },
+        { "name": "reading", "type": "number" },
+        { "name": "unit", "type": "string" }
       ],
       "examples": [
         {
           "inputs": {
-            "zoneId": "Z1"
+            "zoneIds": ["Z1", "Z2"]
           }
         }
       ]
@@ -155,27 +115,22 @@
     "dueForMaintenance": {
       "description": "Machines whose last maintenance is older than a cutoff datetime.",
       "inputs": {
-        "cutoff": {
-          "type": "string",
+        "cutoffs": {
+          "type": "array",
+          "items": { "type": "string" },
           "required": true,
-          "example": "2025-10-01T00:00:00Z"
+          "example": ["2025-10-01T00:00:00Z"]
         }
       },
-      "cypher": "MATCH (m:Machine) WHERE m.lastMaintenance < datetime($cutoff) RETURN m.id AS machineId, m.lastMaintenance AS lastMaintenance ORDER BY lastMaintenance ASC",
+      "cypher": "MATCH (m:Machine) WHERE any(cutoff IN $cutoffs WHERE m.lastMaintenance < datetime(cutoff)) RETURN m.id AS machineId, m.lastMaintenance AS lastMaintenance ORDER BY lastMaintenance ASC",
       "outputs": [
-        {
-          "name": "machineId",
-          "type": "string"
-        },
-        {
-          "name": "lastMaintenance",
-          "type": "string"
-        }
+        { "name": "machineId", "type": "string" },
+        { "name": "lastMaintenance", "type": "string" }
       ],
       "examples": [
         {
           "inputs": {
-            "cutoff": "2025-10-01T00:00:00Z"
+            "cutoffs": ["2025-10-01T00:00:00Z", "2025-11-01T00:00:00Z"]
           }
         }
       ]
