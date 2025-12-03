@@ -21,7 +21,7 @@ try:
 except Exception:
     GraphDatabase = None
 
-CONTRACT_PATH = os.environ.get('SHOPFLOOR_CONTRACT', 'shopfloor_tool_contract.json')
+CONTRACT_PATH = os.environ.get('SHOPFLOOR_CONTRACT', 'shopfloor_tool_contract.json_v1')
 
 @dataclass
 class ToolOperation:
