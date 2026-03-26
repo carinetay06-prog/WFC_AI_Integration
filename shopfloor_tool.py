@@ -4,7 +4,7 @@ ShopfloorGraphTool — Minimal Python wrapper for executing operations defined i
 
 Usage (CLI):
   export NEO4J_URI=neo4j+s://63b14eea.databases.neo4j.io
-  export NEO4J_USER=neo4j
+  export NEO4J_USER=63b14eea
   export NEO4J_PASSWORD=KB5V75StC_x4w1qR5KPHfTz-FFRJ0nmWDAi3ONCy0tA
   python shopfloor_tool.py call highVibrationMachines '{"threshold": 7.5, "unit": "mm/s"}'
 
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     op = sys.argv[2]
     inputs = json.loads(sys.argv[3]) if len(sys.argv) > 3 else {}
     uri = os.environ.get('NEO4J_URI', 'neo4j+s://63b14eea.databases.neo4j.io')
-    user = os.environ.get('NEO4J_USER', 'neo4j')
+    user = os.environ.get('NEO4J_USER', '63b14eea')
     pwd  = os.environ.get('NEO4J_PASSWORD', 'KB5V75StC_x4w1qR5KPHfTz-FFRJ0nmWDAi3ONCy0tA')
     tool = ShopfloorGraphTool(uri, user, pwd)
     try:
