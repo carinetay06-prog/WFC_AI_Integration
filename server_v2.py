@@ -88,7 +88,7 @@ def run_tool(request: ToolRequest):
     # Use ShopfloorGraphTool to actually run against Neo4j
     tool = ShopfloorGraphTool(
     uri="neo4j+s://63b14eea.databases.neo4j.io",
-    user="neo4j",
+    user="63b14eea",
     password="KB5V75StC_x4w1qR5KPHfTz-FFRJ0nmWDAi3ONCy0tA"
     )
 
